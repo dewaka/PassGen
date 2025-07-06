@@ -1,6 +1,6 @@
 # PassGen
 
-A powerful command-line password and passphrase generator written in Rust with customizable alphabets, multiple wordlists, and password strength analysis.
+A command-line password and passphrase generator written in Rust with customizable alphabets, multiple wordlists, and password strength analysis.
 
 ## Features
 
@@ -31,35 +31,35 @@ cargo install --path .
 
 Generate a single password with default settings (12 characters):
 ```bash
-passgen generate
+passgen password
 ```
 
 Generate passwords with custom length:
 ```bash
-passgen generate --length 16
+passgen password --length 16
 ```
 
 Generate multiple passwords:
 ```bash
-passgen generate --count 5 --length 20
+passgen password --count 5 --length 20
 ```
 
 Generate passwords with specific alphabet:
 ```bash
-passgen generate --alphabet lowercase
-passgen generate --alphabet uppercase
-passgen generate --alphabet alphanumeric
-passgen generate --alphabet special
+passgen password --alphabet lowercase
+passgen password --alphabet uppercase
+passgen password --alphabet alphanumeric
+passgen password --alphabet special
 ```
 
 Generate passwords with custom character set:
 ```bash
-passgen generate --custom "abcdef123456!@#"
+passgen password --custom "abcdef123456!@#"
 ```
 
 Show password strength:
 ```bash
-passgen generate --strength
+passgen password --strength
 ```
 
 ### Generate Passphrases
@@ -135,13 +135,13 @@ Available wordlists for passphrase generation:
 
 ```bash
 # Simple password for basic accounts
-passgen generate --length 12 --alphabet alphanumeric
+passgen password --length 12 --alphabet alphanumeric
 
 # High-security password with special characters
-passgen generate --length 16 --alphabet special --strength
+passgen password --length 16 --alphabet special --strength
 
 # Multiple passwords for bulk account creation
-passgen generate --count 10 --length 14 --alphabet special
+passgen password --count 10 --length 14 --alphabet special
 ```
 
 ### Create memorable passphrases
@@ -182,7 +182,7 @@ passgen check "abc123XYZ" --custom "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR
 Enable debug output to see detailed information about the generation process:
 
 ```bash
-passgen -d generate --length 16
+passgen -d password --length 16
 passgen -dd passphrase --length 4  # More verbose
 ```
 
@@ -225,4 +225,3 @@ limitations under the License.
 ## Build Requirements
 
 - Rust 1.70+ (or compatible version)
-- Cargo package manager

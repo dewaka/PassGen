@@ -20,7 +20,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Generate a random password
-    Generate {
+    Password {
         /// Length of the generated password
         #[arg(short, long, default_value_t = 12)]
         length: usize,
@@ -95,7 +95,7 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Some(Commands::Generate {
+        Some(Commands::Password {
             ref alphabet,
             ref custom,
             length,
