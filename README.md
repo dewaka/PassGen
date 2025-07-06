@@ -7,8 +7,10 @@ A command-line password and passphrase generator written in Rust with customizab
 - **Password Generation**: Generate secure random passwords with customizable length and character sets
 - **Passphrase Generation**: Create memorable passphrases using various wordlists
 - **Password Strength Analysis**: Check the strength and entropy of existing passwords
+- **Password Safety Analysis**: Check passwords against common word lists and known weak patterns
 - **Multiple Alphabets**: Support for different character sets including custom alphabets
 - **EFF Wordlists**: Built-in support for Electronic Frontier Foundation wordlists
+- **Custom Word Lists**: Support for user-provided word lists for both generation and safety checking
 - **Batch Generation**: Generate multiple passwords/passphrases at once
 
 ## Installation
@@ -109,6 +111,21 @@ Check strength with custom alphabet:
 passgen check "abc123" --custom "abcdefghijklmnopqrstuvwxyz0123456789"
 ```
 
+Check password safety against custom word list:
+```bash
+passgen check "password123" --wordlist password secret admin user
+```
+
+Disable common word checking:
+```bash
+passgen check "password123" --no-common
+```
+
+Check password strength only (skip safety checks):
+```bash
+passgen check "MyComplexP@ssw0rd!" --common false
+```
+
 ## Alphabets
 
 The tool supports several predefined alphabets:
@@ -160,15 +177,34 @@ passgen passphrase --custom red blue green yellow --length 3 --separator "."
 ### Analyze password security
 
 ```bash
-# Check a weak password
+# Check a weak password (includes common word analysis)
 passgen check "password123"
 
-# Check a strong password
+# Check a strong password with full analysis
 passgen check "Tr0ub4dor&3" --alphabet special
 
-# Check against custom requirements
-passgen check "abc123XYZ" --custom "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+# Check against custom requirements and word list
+passgen check "abc123XYZ" --custom "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" --wordlist common weak
+
+# Check strength only without safety analysis
+passgen check "MyP@ssw0rd!" --common false
 ```
+
+## Password Safety Analysis
+
+The tool can check passwords against various common word lists:
+
+- **Common Passwords**: Known weak passwords from data breaches
+- **English Words**: Common English dictionary words
+- **Names**: Common first and last names
+- **Word Combinations**: Detects concatenated common words
+- **Custom Lists**: User-provided word lists for domain-specific checking
+
+Safety checks help identify passwords that might be:
+- Dictionary words
+- Common passwords
+- Names or personal information
+- Simple combinations of common words
 
 ## Security Notes
 

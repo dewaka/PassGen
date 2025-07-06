@@ -12,9 +12,11 @@ pub enum WordList {
 }
 
 // Wordlist file contents
-const EFF_LARGE_WORDLIST: &str = include_str!("../../resources/eff_large_wordlist.txt");
-const EFF_SHORT_WORDLIST_1: &str = include_str!("../../resources/eff_short_wordlist_1.txt");
-const EFF_SHORT_WORDLIST_2_0: &str = include_str!("../../resources/eff_short_wordlist_2_0.txt");
+const EFF_LARGE_WORDLIST: &str = include_str!("../../resources/wordlist/eff_large_wordlist.txt");
+const EFF_SHORT_WORDLIST_1: &str =
+    include_str!("../../resources/wordlist/eff_short_wordlist_1.txt");
+const EFF_SHORT_WORDLIST_2_0: &str =
+    include_str!("../../resources/wordlist/eff_short_wordlist_2_0.txt");
 
 // Static caches for lazy loading
 static EFF_LARGE_CACHE: OnceLock<Vec<&'static str>> = OnceLock::new();
@@ -147,7 +149,11 @@ mod tests {
 
     #[test]
     fn test_custom_wordlist_creation() {
-        let custom_words = vec!["apple".to_string(), "banana".to_string(), "cherry".to_string()];
+        let custom_words = vec![
+            "apple".to_string(),
+            "banana".to_string(),
+            "cherry".to_string(),
+        ];
         let wordlist = WordList::from_custom(custom_words.clone());
 
         if let WordList::Custom(words) = wordlist {
@@ -180,7 +186,7 @@ mod tests {
             "hello-world".to_string(),
             "test@email.com".to_string(),
             "unicode_測試".to_string(),
-            "emoji🎉".to_string()
+            "emoji🎉".to_string(),
         ];
         let wordlist = WordList::from_custom(special_words.clone());
         let words = wordlist.words();
@@ -223,7 +229,9 @@ mod tests {
 
         let custom_original = WordList::from_custom(vec!["test".to_string()]);
         let custom_cloned = custom_original.clone();
-        if let (WordList::Custom(orig), WordList::Custom(cloned)) = (&custom_original, &custom_cloned) {
+        if let (WordList::Custom(orig), WordList::Custom(cloned)) =
+            (&custom_original, &custom_cloned)
+        {
             assert_eq!(orig, cloned);
         } else {
             panic!("Expected both to be Custom variants");

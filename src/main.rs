@@ -1,6 +1,7 @@
 mod passgen;
 
 use crate::passgen::alphabet::Alphabet;
+use crate::passgen::commonwords;
 use crate::passgen::wordlist::WordList;
 use clap::{Parser, Subcommand};
 use log::debug;
@@ -77,6 +78,14 @@ enum Commands {
         // Alphabet to use for password strength calculation
         #[arg(short, long)]
         alphabet: Option<Alphabet>,
+
+        // Check safety against common words
+        #[arg(short, long, default_value_t = true)]
+        common: bool,
+
+        /// Word list to check for common word combinations
+        #[arg(short, long, num_args = 1..)]
+        wordlist: Option<Vec<String>>,
     },
 }
 
@@ -87,6 +96,46 @@ fn generate_password(length: usize, alphabet: &Alphabet, strength: bool) {
         println!("{} [{:?}]", password.value, classification.unwrap());
     } else {
         println!("{}", password.value);
+    }
+}
+
+fn check_password_safety(password: &Password) -> Option<String> {
+    let safety_checks = [
+        (commonwords::CommonWords::Passwords, "common password"),
+        (commonwords::CommonWords::English, "common English word"),
+        (commonwords::CommonWords::MaleNames, "common male name"),
+        (commonwords::CommonWords::FemaleNames, "common female name"),
+        (commonwords::CommonWords::LastNames, "common last name"),
+        (commonwords::CommonWords::All, "combination of common words"),
+    ];
+
+    for (word_type, description) in safety_checks {
+        if !password.is_safe(word_type) {
+            return Some(format!(
+                "{} is not safe because it is a {}",
+                password.value, description
+            ));
+        }
+    }
+    None
+}
+
+fn get_alphabet_from_args(alphabet: &Option<Alphabet>, custom: &Option<String>) -> Alphabet {
+    if let Some(custom_alphabet) = custom {
+        Alphabet::Custom(custom_alphabet.clone())
+    } else {
+        alphabet.clone().unwrap_or_default()
+    }
+}
+
+fn validate_alphabet_args(
+    alphabet: &Option<Alphabet>,
+    custom: &Option<String>,
+) -> Result<(), &'static str> {
+    if alphabet.is_some() && custom.is_some() {
+        Err("Cannot specify both alphabet and custom alphabet.")
+    } else {
+        Ok(())
     }
 }
 
@@ -102,8 +151,8 @@ fn main() {
             strength,
             count,
         }) => {
-            if alphabet.is_some() && custom.is_some() {
-                eprintln!("Error: Cannot specify both alphabet and custom alphabet.");
+            if let Err(e) = validate_alphabet_args(alphabet, custom) {
+                eprintln!("Error: {}", e);
                 return;
             }
 
@@ -150,12 +199,30 @@ fn main() {
             password,
             ref alphabet,
             ref custom,
+            common,
+            ref wordlist,
         }) => {
             debug!("Checking password");
 
             let alphabet = get_alphabet_from_args(alphabet, custom);
-
             let password_obj = Password { value: password };
+
+            if common {
+                if let Some(wl) = wordlist {
+                    let common_words = commonwords::CommonWords::Custom(wl.clone());
+                    if !password_obj.is_safe(common_words) {
+                        println!(
+                            "{} is not safe because it contains common words from the provided list",
+                            password_obj.value
+                        );
+                        return;
+                    }
+                } else if let Some(safety_message) = check_password_safety(&password_obj) {
+                    println!("{}", safety_message);
+                    return;
+                }
+            }
+
             match password_obj.classify(&alphabet) {
                 Ok(classification) => {
                     println!("{} -> {:?}", password_obj.value, classification);
@@ -169,16 +236,4 @@ fn main() {
             eprintln!("No command provided. Use --help for more information.");
         }
     }
-}
-
-fn get_alphabet_from_args(alphabet: &Option<Alphabet>, custom: &Option<String>) -> Alphabet {
-    let alphabet: Alphabet = if custom.is_none() {
-        match alphabet {
-            Some(alphabet) => alphabet.clone(),
-            None => Alphabet::default(),
-        }
-    } else {
-        Alphabet::Custom(custom.clone().unwrap())
-    };
-    alphabet
 }
