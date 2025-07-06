@@ -128,6 +128,39 @@ mod tests {
             special_password.classify(&Alphabet::SpecialChars).unwrap(),
             Classification::Weak
         );
+
+        // Test Custom alphabet - binary
+        let custom_binary = Alphabet::Custom("01".to_string());
+        let binary_password = Password {
+            value: "1010110011".to_string(), // 10 chars, binary: ~10 entropy
+        };
+        assert_eq!(
+            binary_password.classify(&custom_binary).unwrap(),
+            Classification::Weak
+        );
+
+        // Test Custom alphabet - hex
+        let custom_hex = Alphabet::Custom("0123456789abcdef".to_string());
+        let hex_password = Password {
+            value: "deadbeef".to_string(), // 8 chars, hex: ~32 entropy
+        };
+        assert_eq!(
+            hex_password.classify(&custom_hex).unwrap(),
+            Classification::Medium
+        );
+
+        // Test Custom alphabet - strong
+        let custom_large = Alphabet::Custom(
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()+-="
+                .to_string(),
+        );
+        let custom_strong_password = Password {
+            value: "CustomP@ss123".to_string(), // 13 chars, large custom alphabet
+        };
+        assert_eq!(
+            custom_strong_password.classify(&custom_large).unwrap(),
+            Classification::VeryStrong
+        );
     }
 
     #[test]
@@ -189,5 +222,25 @@ mod tests {
             value: "pass word".to_string(), // space is not in any alphabet
         };
         assert!(invalid_space.classify(&Alphabet::Full).is_err());
+
+        // Test Custom alphabet - invalid characters
+        let custom_vowels = Alphabet::Custom("aeiou".to_string());
+        let invalid_custom = Password {
+            value: "hello".to_string(), // contains 'h', 'l' which are not vowels
+        };
+        assert!(invalid_custom.classify(&custom_vowels).is_err());
+
+        // Test Custom alphabet - valid characters
+        let valid_custom = Password {
+            value: "aeio".to_string(), // only vowels
+        };
+        assert!(valid_custom.classify(&custom_vowels).is_ok());
+
+        // Test Custom alphabet - empty alphabet
+        let empty_custom = Alphabet::Custom("".to_string());
+        let any_password = Password {
+            value: "a".to_string(),
+        };
+        assert!(any_password.classify(&empty_custom).is_err());
     }
 }
