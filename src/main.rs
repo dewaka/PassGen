@@ -32,7 +32,6 @@ enum Commands {
         #[arg(short, long, default_value_t = false)]
         strength: bool,
 
-
         /// Number of passwords to generate (default: 1)
         #[arg(short, long, default_value_t = 1)]
         count: usize,

@@ -62,7 +62,9 @@ mod tests {
             value: "abc".to_string(), // 3 chars, lowercase only: ~14.1 entropy
         };
         assert_eq!(
-            weak_password.classify(Alphabet::LowerCase.as_str()).unwrap(),
+            weak_password
+                .classify(Alphabet::LowerCase.as_str())
+                .unwrap(),
             Classification::Weak
         );
 
@@ -71,7 +73,9 @@ mod tests {
             value: "abcdef".to_string(), // 6 chars, lowercase only: ~28.2 entropy
         };
         assert_eq!(
-            medium_password.classify(Alphabet::LowerCase.as_str()).unwrap(),
+            medium_password
+                .classify(Alphabet::LowerCase.as_str())
+                .unwrap(),
             Classification::Medium
         );
 
@@ -80,7 +84,9 @@ mod tests {
             value: "password".to_string(), // 8 chars, lowercase only: ~37.6 entropy
         };
         assert_eq!(
-            strong_password.classify(Alphabet::LowerCase.as_str()).unwrap(),
+            strong_password
+                .classify(Alphabet::LowerCase.as_str())
+                .unwrap(),
             Classification::Medium
         );
 
@@ -97,7 +103,9 @@ mod tests {
             value: "Password123!".to_string(), // 12 chars, full alphabet: ~79.6 entropy
         };
         assert_eq!(
-            very_strong_password.classify(Alphabet::Full.as_str()).unwrap(),
+            very_strong_password
+                .classify(Alphabet::Full.as_str())
+                .unwrap(),
             Classification::VeryStrong
         );
 
@@ -124,7 +132,9 @@ mod tests {
             value: "!@#$".to_string(), // 4 chars, special chars: ~12 entropy
         };
         assert_eq!(
-            special_password.classify(Alphabet::SpecialChars.as_str()).unwrap(),
+            special_password
+                .classify(Alphabet::SpecialChars.as_str())
+                .unwrap(),
             Classification::Weak
         );
     }
@@ -137,37 +147,61 @@ mod tests {
         let invalid_password = Password {
             value: "Password123!".to_string(),
         };
-        assert!(invalid_password.classify(Alphabet::LowerCase.as_str()).is_err());
+        assert!(
+            invalid_password
+                .classify(Alphabet::LowerCase.as_str())
+                .is_err()
+        );
 
         // Test uppercase characters in lowercase-only alphabet
         let invalid_uppercase = Password {
             value: "Password".to_string(),
         };
-        assert!(invalid_uppercase.classify(Alphabet::LowerCase.as_str()).is_err());
+        assert!(
+            invalid_uppercase
+                .classify(Alphabet::LowerCase.as_str())
+                .is_err()
+        );
 
         // Test lowercase characters in uppercase-only alphabet
         let invalid_lowercase = Password {
             value: "password".to_string(),
         };
-        assert!(invalid_lowercase.classify(Alphabet::UpperCase.as_str()).is_err());
+        assert!(
+            invalid_lowercase
+                .classify(Alphabet::UpperCase.as_str())
+                .is_err()
+        );
 
         // Test letters in digits-only alphabet
         let invalid_letters_in_digits = Password {
             value: "123abc".to_string(),
         };
-        assert!(invalid_letters_in_digits.classify(Alphabet::Digits.as_str()).is_err());
+        assert!(
+            invalid_letters_in_digits
+                .classify(Alphabet::Digits.as_str())
+                .is_err()
+        );
 
         // Test digits in special-chars-only alphabet
         let invalid_digits_in_special = Password {
             value: "!@#123".to_string(),
         };
-        assert!(invalid_digits_in_special.classify(Alphabet::SpecialChars.as_str()).is_err());
+        assert!(
+            invalid_digits_in_special
+                .classify(Alphabet::SpecialChars.as_str())
+                .is_err()
+        );
 
         // Test special characters not in the defined special chars set
         let invalid_special = Password {
             value: "password~`".to_string(), // ~ and ` are not in SPECIAL_CHARS
         };
-        assert!(invalid_special.classify(Alphabet::SpecialChars.as_str()).is_err());
+        assert!(
+            invalid_special
+                .classify(Alphabet::SpecialChars.as_str())
+                .is_err()
+        );
 
         // Test unicode characters
         let invalid_unicode = Password {
