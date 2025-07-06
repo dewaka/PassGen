@@ -44,7 +44,6 @@ enum Commands {
     /// Check password strength
     Check {
         /// Password to check for strength
-        #[arg(short, long)]
         password: String,
 
         /// Custom alphabet to use for password strength calculation
@@ -107,8 +106,7 @@ fn main() {
             let password_obj = Password { value: password };
             match password_obj.classify(&alphabet) {
                 Ok(classification) => {
-                    println!("Password: {}", password_obj.value);
-                    println!("Strength: {:?}", classification);
+                    println!("{} -> {:?}", password_obj.value, classification);
                 }
                 Err(e) => {
                     eprintln!("Error classifying password: {}", e);
