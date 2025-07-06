@@ -28,6 +28,10 @@ enum Commands {
         #[arg(short, long)]
         alphabet: Option<Alphabet>,
 
+        /// Custom alphabet to use for password generation
+        #[arg(short = 'C', long = "custom")]
+        custom: Option<String>,
+
         /// Print strength of the generated password (default: false)
         #[arg(short, long, default_value_t = false)]
         strength: bool,
@@ -43,13 +47,17 @@ enum Commands {
         #[arg(short, long)]
         password: String,
 
+        /// Custom alphabet to use for password strength calculation
+        #[arg(short = 'C', long = "custom")]
+        custom: Option<String>,
+
         // Alphabet to use for password strength calculation
         #[arg(short, long)]
         alphabet: Option<Alphabet>,
     },
 }
 
-fn generate_password(length: usize, alphabet: &str, strength: bool) {
+fn generate_password(length: usize, alphabet: &Alphabet, strength: bool) {
     let password = Password::generate(length, alphabet);
     if strength {
         let classification = password.classify(alphabet);
@@ -66,34 +74,38 @@ fn main() {
     match cli.command {
         Some(Commands::Generate {
             ref alphabet,
+            ref custom,
             length,
             strength,
             count,
         }) => {
-            let alphabet_str = match alphabet {
-                Some(alphabet) => alphabet.as_str(),
-                None => Alphabet::Full.as_str(),
-            };
+            if alphabet.is_some() && custom.is_some() {
+                eprintln!("Error: Cannot specify both alphabet and custom alphabet.");
+                return;
+            }
+
+            let alphabet = get_alphabet_from_args(alphabet, custom);
+
             debug!(
-                "Generating {} passwords with length: {}, alphabet: {}",
-                count, length, alphabet_str
+                "Generating {} passwords with length: {}, alphabet: {:?}",
+                count, length, alphabet
             );
+
             for _ in 0..count {
-                generate_password(length, alphabet_str, strength);
+                generate_password(length, &alphabet, strength);
             }
         }
         Some(Commands::Check {
             password,
             ref alphabet,
+            ref custom,
         }) => {
             debug!("Checking password");
-            let alphabet_str = match alphabet {
-                Some(alphabet) => alphabet.as_str(),
-                None => Alphabet::Full.as_str(),
-            };
+
+            let alphabet = get_alphabet_from_args(alphabet, custom);
 
             let password_obj = Password { value: password };
-            match password_obj.classify(alphabet_str) {
+            match password_obj.classify(&alphabet) {
                 Ok(classification) => {
                     println!("Password: {}", password_obj.value);
                     println!("Strength: {:?}", classification);
@@ -107,4 +119,16 @@ fn main() {
             eprintln!("No command provided. Use --help for more information.");
         }
     }
+}
+
+fn get_alphabet_from_args(alphabet: &Option<Alphabet>, custom: &Option<String>) -> Alphabet {
+    let alphabet: Alphabet = if custom.is_none() {
+        match alphabet {
+            Some(alphabet) => alphabet.clone(),
+            None => Alphabet::Full,
+        }
+    } else {
+        Alphabet::Custom(custom.clone().unwrap())
+    };
+    alphabet
 }
