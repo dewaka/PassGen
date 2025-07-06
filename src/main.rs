@@ -1,6 +1,7 @@
 mod passgen;
 
 use crate::passgen::alphabet::Alphabet;
+use crate::passgen::wordlist::WordList;
 use clap::{Parser, Subcommand};
 use log::debug;
 use passgen::Password;
@@ -32,11 +33,34 @@ enum Commands {
         #[arg(short = 'C', long = "custom")]
         custom: Option<String>,
 
-        /// Print strength of the generated password (default: false)
+        /// Print strength of the generated password
         #[arg(short, long, default_value_t = false)]
         strength: bool,
 
-        /// Number of passwords to generate (default: 1)
+        /// Number of passwords to generate
+        #[arg(short, long, default_value_t = 1)]
+        count: usize,
+    },
+
+    /// Generate a passphrase from a word list
+    Passphrase {
+        /// Length of the generated password
+        #[arg(short, long, default_value_t = 3)]
+        length: usize,
+
+        /// Word list to use for password generation
+        #[arg(short, long)]
+        wordlist: Option<WordList>,
+
+        /// Custom words to use for passphrase generation (can be specified multiple times)
+        #[arg(short = 'C', long = "custom", num_args = 1..)]
+        custom: Option<Vec<String>>,
+
+        /// Custom separator for the passphrase
+        #[arg(short, long, default_value = "-")]
+        separator: String,
+
+        /// Number of passwords to generate
         #[arg(short, long, default_value_t = 1)]
         count: usize,
     },
@@ -94,6 +118,34 @@ fn main() {
                 generate_password(length, &alphabet, strength);
             }
         }
+
+        Some(Commands::Passphrase {
+            length,
+            ref wordlist,
+            ref custom,
+            separator,
+            count,
+        }) => {
+            debug!(
+                "Generating {} passphrases with length: {}, separator: {}",
+                count, length, separator
+            );
+
+            let wordlist = if let Some(wl) = wordlist {
+                wl.clone()
+            } else if let Some(custom_words) = custom {
+                WordList::from_custom(custom_words.clone())
+            } else {
+                WordList::default()
+            };
+
+            for _ in 0..count {
+                let passphrase =
+                    passgen::passphrase::generate_passphrase(length, &separator, &wordlist);
+                println!("{}", passphrase.value);
+            }
+        }
+
         Some(Commands::Check {
             password,
             ref alphabet,
@@ -123,7 +175,7 @@ fn get_alphabet_from_args(alphabet: &Option<Alphabet>, custom: &Option<String>) 
     let alphabet: Alphabet = if custom.is_none() {
         match alphabet {
             Some(alphabet) => alphabet.clone(),
-            None => Alphabet::Full,
+            None => Alphabet::default(),
         }
     } else {
         Alphabet::Custom(custom.clone().unwrap())

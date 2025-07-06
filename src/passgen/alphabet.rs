@@ -17,6 +17,12 @@ const UPPER_CASE: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const DIGITS: &str = "0123456789";
 const SPECIAL_CHARS: &str = "!@#$%^&*";
 
+impl Default for Alphabet {
+    fn default() -> Self {
+        Alphabet::Full
+    }
+}
+
 impl Alphabet {
     pub fn as_str(&self) -> &str {
         match self {
