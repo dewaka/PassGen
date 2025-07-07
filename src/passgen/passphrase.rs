@@ -1,9 +1,8 @@
 // Or for lazy loading:
 
-use crate::passgen::Password;
+use crate::passgen::password::Password;
 use crate::passgen::wordlist::WordList;
 use rand::Rng;
-use std::borrow::Cow;
 
 pub fn generate_passphrase(
     word_count: usize,
@@ -12,9 +11,7 @@ pub fn generate_passphrase(
 ) -> Password<'static> {
     let words = wordlist.words();
     if words.is_empty() || word_count == 0 {
-        return Password {
-            value: Cow::Borrowed(""),
-        };
+        return Password::new("");
     }
 
     let mut rng = rand::rng();
@@ -25,9 +22,7 @@ pub fn generate_passphrase(
         })
         .collect();
 
-    Password {
-        value: Cow::Owned(passphrase_parts.join(separator)),
-    }
+    Password::new(passphrase_parts.join(separator))
 }
 
 #[cfg(test)]

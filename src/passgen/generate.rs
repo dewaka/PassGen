@@ -1,5 +1,5 @@
-use crate::passgen::Password;
 use crate::passgen::alphabet::Alphabet;
+use crate::passgen::password::Password;
 use rand::Rng;
 use std::borrow::Cow;
 

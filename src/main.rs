@@ -2,12 +2,11 @@ mod passgen;
 
 use crate::passgen::alphabet::Alphabet;
 use crate::passgen::commonwords::CommonWords;
+use crate::passgen::password::Password;
 use crate::passgen::wordlist::WordList;
 use crate::passgen::{commonwords, passphrase};
 use clap::{Parser, Subcommand};
 use log::debug;
-use passgen::Password;
-use std::borrow::Cow;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -206,9 +205,7 @@ fn main() {
             debug!("Checking password");
 
             let alphabet = get_alphabet_from_args(alphabet, custom);
-            let password_obj = Password {
-                value: Cow::Borrowed(&password),
-            };
+            let password_obj = Password::new(&password);
 
             if common {
                 if let Some(wl) = wordlist {
