@@ -3,25 +3,30 @@
 use crate::passgen::Password;
 use crate::passgen::wordlist::WordList;
 use rand::Rng;
+use std::borrow::Cow;
 
-pub fn generate_passphrase(word_count: usize, separator: &str, wordlist: &WordList) -> Password {
+pub fn generate_passphrase(
+    word_count: usize,
+    separator: &str,
+    wordlist: &WordList,
+) -> Password<'static> {
     let words = wordlist.words();
-    if words.is_empty() {
+    if words.is_empty() || word_count == 0 {
         return Password {
-            value: String::new(),
+            value: Cow::Borrowed(""),
         };
     }
 
     let mut rng = rand::rng();
-    let passphrase: Vec<String> = (0..word_count)
+    let passphrase_parts: Vec<&str> = (0..word_count)
         .map(|_| {
             let idx = rng.random_range(0..words.len());
-            words[idx].to_string()
+            words[idx]
         })
         .collect();
 
     Password {
-        value: passphrase.join(separator),
+        value: Cow::Owned(passphrase_parts.join(separator)),
     }
 }
 
@@ -70,7 +75,7 @@ mod tests {
 
         let passphrase = generate_passphrase(1, "-", &wordlist);
 
-        assert_eq!(passphrase.value, "single");
+        assert_eq!(passphrase.value.as_ref(), "single");
         assert!(!passphrase.value.contains('-'));
     }
 
@@ -108,7 +113,7 @@ mod tests {
 
         // Generate multiple passphrases and check they're not all identical
         let passphrases: Vec<String> = (0..10)
-            .map(|_| generate_passphrase(3, "-", &wordlist).value)
+            .map(|_| generate_passphrase(3, "-", &wordlist).value.into_owned())
             .collect();
 
         // With 6 words choosing 3, we should get some variation

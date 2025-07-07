@@ -1,11 +1,13 @@
 mod passgen;
 
 use crate::passgen::alphabet::Alphabet;
-use crate::passgen::commonwords;
+use crate::passgen::commonwords::CommonWords;
 use crate::passgen::wordlist::WordList;
+use crate::passgen::{commonwords, passphrase};
 use clap::{Parser, Subcommand};
 use log::debug;
 use passgen::Password;
+use std::borrow::Cow;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -100,16 +102,16 @@ fn generate_password(length: usize, alphabet: &Alphabet, strength: bool) {
 }
 
 fn check_password_safety(password: &Password) -> Option<String> {
-    let safety_checks = [
-        (commonwords::CommonWords::Passwords, "common password"),
-        (commonwords::CommonWords::English, "common English word"),
-        (commonwords::CommonWords::MaleNames, "common male name"),
-        (commonwords::CommonWords::FemaleNames, "common female name"),
-        (commonwords::CommonWords::LastNames, "common last name"),
-        (commonwords::CommonWords::All, "combination of common words"),
+    const SAFETY_CHECKS: &[(CommonWords, &str)] = &[
+        (CommonWords::Passwords, "common password"),
+        (CommonWords::English, "common English word"),
+        (CommonWords::MaleNames, "common male name"),
+        (CommonWords::FemaleNames, "common female name"),
+        (CommonWords::LastNames, "common last name"),
+        (CommonWords::All, "combination of common words"),
     ];
 
-    for (word_type, description) in safety_checks {
+    for (word_type, description) in SAFETY_CHECKS {
         if !password.is_safe(word_type) {
             return Some(format!(
                 "{} is not safe because it is a {}",
@@ -120,11 +122,11 @@ fn check_password_safety(password: &Password) -> Option<String> {
     None
 }
 
-fn get_alphabet_from_args(alphabet: &Option<Alphabet>, custom: &Option<String>) -> Alphabet {
+fn get_alphabet_from_args(alphabet: Option<Alphabet>, custom: Option<String>) -> Alphabet {
     if let Some(custom_alphabet) = custom {
-        Alphabet::Custom(custom_alphabet.clone())
+        Alphabet::Custom(custom_alphabet)
     } else {
-        alphabet.clone().unwrap_or_default()
+        alphabet.unwrap_or_default()
     }
 }
 
@@ -145,13 +147,13 @@ fn main() {
 
     match cli.command {
         Some(Commands::Password {
-            ref alphabet,
-            ref custom,
+            alphabet,
+            custom,
             length,
             strength,
             count,
         }) => {
-            if let Err(e) = validate_alphabet_args(alphabet, custom) {
+            if let Err(e) = validate_alphabet_args(&alphabet, &custom) {
                 eprintln!("Error: {}", e);
                 return;
             }
@@ -160,7 +162,7 @@ fn main() {
 
             debug!(
                 "Generating {} passwords with length: {}, alphabet: {:?}",
-                count, length, alphabet
+                count, length, &alphabet
             );
 
             for _ in 0..count {
@@ -170,8 +172,8 @@ fn main() {
 
         Some(Commands::Passphrase {
             length,
-            ref wordlist,
-            ref custom,
+            wordlist,
+            custom,
             separator,
             count,
         }) => {
@@ -181,36 +183,37 @@ fn main() {
             );
 
             let wordlist = if let Some(wl) = wordlist {
-                wl.clone()
+                wl
             } else if let Some(custom_words) = custom {
-                WordList::from_custom(custom_words.clone())
+                WordList::from_custom(custom_words)
             } else {
                 WordList::default()
             };
 
             for _ in 0..count {
-                let passphrase =
-                    passgen::passphrase::generate_passphrase(length, &separator, &wordlist);
+                let passphrase = passphrase::generate_passphrase(length, &separator, &wordlist);
                 println!("{}", passphrase.value);
             }
         }
 
         Some(Commands::Check {
             password,
-            ref alphabet,
-            ref custom,
+            alphabet,
+            custom,
             common,
-            ref wordlist,
+            wordlist,
         }) => {
             debug!("Checking password");
 
             let alphabet = get_alphabet_from_args(alphabet, custom);
-            let password_obj = Password { value: password };
+            let password_obj = Password {
+                value: Cow::Borrowed(&password),
+            };
 
             if common {
                 if let Some(wl) = wordlist {
-                    let common_words = commonwords::CommonWords::Custom(wl.clone());
-                    if !password_obj.is_safe(common_words) {
+                    let common_words = commonwords::CommonWords::Custom(wl);
+                    if !password_obj.is_safe(&common_words) {
                         println!(
                             "{} is not safe because it contains common words from the provided list",
                             password_obj.value

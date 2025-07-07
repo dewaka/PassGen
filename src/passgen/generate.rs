@@ -1,17 +1,27 @@
 use crate::passgen::Password;
 use crate::passgen::alphabet::Alphabet;
 use rand::Rng;
+use std::borrow::Cow;
 
-impl Password {
-    pub fn generate(len: usize, alphabet: &Alphabet) -> Self {
+impl<'a> Password<'a> {
+    pub fn generate(len: usize, alphabet: &Alphabet) -> Password<'static> {
         let mut rng = rand::rng();
+        let alphabet_str = alphabet.as_str();
+        let chars: Vec<char> = alphabet_str.chars().collect();
+        if chars.is_empty() {
+            return Password {
+                value: Cow::Borrowed(""),
+            };
+        }
         let password: String = (0..len)
             .map(|_| {
-                let idx = rng.random_range(0..alphabet.len());
-                alphabet.as_str().chars().nth(idx).unwrap()
+                let idx = rng.random_range(0..chars.len());
+                chars[idx]
             })
             .collect();
-        Password { value: password }
+        Password {
+            value: Cow::Owned(password),
+        }
     }
 }
 
